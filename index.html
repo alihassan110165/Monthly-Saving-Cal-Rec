@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173f35">
+<title>My Savings Ledger</title>
+<style>
+:root{--green:#173f35;--green2:#24594b;--mint:#e7f2ec;--bg:#f4f7f5;--card:#fff;--text:#17231f;--muted:#66756e;--line:#dce5df;--red:#a33d37}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--green);color:#fff;padding:24px 18px 30px;border-radius:0 0 24px 24px}
+.wrap{max-width:850px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}h1{margin:7px 0;font-size:28px}header p{margin:0;color:#dcebe3;font-size:14px}
+main{max-width:850px;margin:-14px auto 30px;padding:0 14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:13px;box-shadow:0 4px 14px #183c2b0a}
+.hero{background:var(--green2);color:#fff;border:0}.hero small{opacity:.8}.amount{font-size:32px;font-weight:750;margin:4px 0}.hero .sub{font-size:13px;opacity:.85}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:var(--mint);border-radius:14px;padding:13px}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}
+h2{font-size:17px;margin:0 0 14px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+input,select{width:100%;font:inherit;padding:11px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#17231f;min-width:0}
+input:focus,select:focus{outline:2px solid #78a995;outline-offset:1px}
+.full{grid-column:1/-1}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button,.filebtn{font:inherit;font-size:13px;font-weight:650;border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:#fff;color:var(--text);cursor:pointer;text-align:center}
+button.primary{background:var(--green);color:#fff;border-color:var(--green)}button.danger{color:var(--red)}button:active{transform:scale(.99)}
+.note{font-size:12px;line-height:1.5;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}td.num,th.num{text-align:right;white-space:nowrap}
+.tablewrap{overflow-x:auto}.empty{padding:18px 5px;color:var(--muted);font-size:13px}
+.month-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+#status{font-size:12px;color:var(--green2);min-height:18px;margin-top:8px}
+@media(max-width:520px){.fields{grid-template-columns:1fr 1fr}.amount{font-size:28px}.panel{padding:14px}.stats{gap:8px}.stat{padding:11px}.stat strong{font-size:16px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">Personal finance · PKR</div><h1>My Savings Ledger</h1><p>A monthly budget you can update, save and review over time.</p></div></header>
+<main>
+<section class="panel hero">
+  <small id="summaryMonth">This month’s available savings</small>
+  <div class="amount" id="available">Rs. 0</div>
+  <div class="sub" id="savingsRate">Savings rate: 0%</div>
+</section>
+<section class="stats">
+ <div class="stat"><small>Monthly expenses</small><strong id="totalExpenses">Rs. 0</strong></div>
+ <div class="stat"><small>Saved / invested</small><strong id="totalSetAside">Rs. 0</strong></div>
+ <div class="stat"><small>Recorded months</small><strong id="monthCount">0</strong></div>
+ <div class="stat"><small>Total saved to date*</small><strong id="cumulative">Rs. 0</strong></div>
+</section>
+<section class="panel">
+ <div class="month-head"><h2 style="margin:0">Monthly entry</h2><select id="month" aria-label="Choose month" style="max-width:170px"></select></div>
+ <div class="fields">
+  <div><label for="salary">Salary / income (Rs.)</label><input id="salary" type="number" min="0" step="100" value="65000"></div>
+  <div><label for="fuel">Fuel / transport</label><input id="fuel" type="number" min="0" step="100" value="8000"></div>
+  <div><label for="food">Food / groceries</label><input id="food" type="number" min="0" step="100" value="12000"></div>
+  <div><label for="bills">Bills / utilities</label><input id="bills" type="number" min="0" step="100" value="5000"></div>
+  <div><label for="personal">Personal expenses</label><input id="personal" type="number" min="0" step="100" value="5000"></div>
+  <div><label for="loan">Loan installment</label><input id="loan" type="number" min="0" step="100" value="0"></div>
+  <div><label for="other">Other expenses</label><input id="other" type="number" min="0" step="100" value="5000"></div>
+  <div><label for="invest">Investment contribution</label><input id="invest" type="number" min="0" step="100" value="0"></div>
+  <div class="full"><label for="notes">Notes (optional)</label><input id="notes" type="text" maxlength="240" placeholder="e.g. annual fee, bonus, unexpected expense"></div>
+ </div>
+ <div class="actions"><button class="primary" id="save">Save this month</button><button id="newMonth">New month</button><button id="clearForm">Clear fields</button></div>
+ <div id="status" role="status"></div>
+ <p class="note">Available savings = income − expenses − investment contribution. No house rent is included. Enter a month and save it; you can return to earlier months to review or edit them.</p>
+</section>
+<section class="panel">
+ <h2>Saved monthly history</h2>
+ <div class="tablewrap"><table><thead><tr><th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Available</th><th></th></tr></thead><tbody id="history"></tbody></table></div>
+ <div id="empty" class="empty">No saved months yet. Save your first monthly entry above.</div>
+ <div class="actions"><button id="export">Export backup (JSON)</button><label class="filebtn" for="importFile" style="margin:0">Import backup</label><input id="importFile" type="file" accept=".json,application/json" hidden><button class="danger" id="deleteAll">Delete all saved data</button></div>
+ <p class="note">*Total saved to date adds the available savings from all saved months. If a month has a negative balance, it reduces the total. Data is stored in this browser on this device. Export a backup regularly, especially before clearing browser data or changing devices.</p>
+</section>
+<section class="panel">
+ <h2>Long-term projection</h2>
+ <div class="fields">
+  <div><label for="years">Years</label><select id="years"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>15</option><option>20</option><option>30</option></select></div>
+  <div><label for="raise">Annual salary increase (%)</label><input id="raise" type="number" min="0" max="100" value="0" step="1"></div>
+ </div>
+ <div class="stats" style="margin-top:12px">
+  <div class="stat"><small>At current monthly savings</small><strong id="projectionFlat">Rs. 0</strong></div>
+  <div class="stat"><small>With salary increases*</small><strong id="projectionRaise">Rs. 0</strong></div>
+ </div>
+ <p class="note">*Projection assumes expenses and investment contributions stay unchanged while salary rises by the percentage entered. No investment returns or inflation are included.</p>
+</section>
+</main>
+<script>
+(function(){
+ const $=id=>document.getElementById(id);
+ const fields=['salary','fuel','food','bills','personal','loan','other','invest','notes'];
+ const nums=['salary','fuel','food','bills','personal','loan','other','invest'];
+ const STORE='mySavingsLedger_v1';
+ let records={};
+ const now=new Date();
+ const pad=n=>String(n).padStart(2,'0');
+ const currentKey=now.getFullYear()+'-'+pad(now.getMonth()+1);
+ const money=n=>'Rs. '+Math.round(Number(n)||0).toLocaleString('en-PK');
+ const monthLabel=k=>{const [y,m]=k.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('en-PK',{month:'short',year:'numeric'});};
+ function readStore(){try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object')records=parsed;}}catch(e){records={};}}
+ function persist(){try{localStorage.setItem(STORE,JSON.stringify(records));$('status').textContent='Saved on this device in this browser.';}catch(e){$('status').textContent='Browser storage is unavailable. Please export a backup to keep your data.';}}
+ function ensureMonthOptions(){const select=$('month');const old=select.value;const keys=new Set([...Object.keys(records),currentKey,old].filter(Boolean));select.innerHTML='';[...keys].sort().reverse().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);select.appendChild(o)});select.value=keys.has(old)?old:currentKey;}
+ function getEntry(){const o={};fields.forEach(k=>o[k]=nums.includes(k)?Math.max(0,Number($(k).value)||0):$(k).value.trim());return o;}
+ function totals(e){const expenses=['fuel','food','bills','personal','loan','other'].reduce((s,k)=>s+(Number(e[k])||0),0);const saved=(Number(e.salary)||0)-expenses-(Number(e.invest)||0);return {expenses,saved,setAside:(Number(e.invest)||0)+saved};}
+ function loadMonth(k){ensureMonthOptions();$('month').value=k;const e=records[k]||{salary:65000,fuel:8000,food:12000,bills:5000,personal:5000,loan:0,other:5000,invest:0,notes:''};fields.forEach(f=>$(f).value=e[f]??(nums.includes(f)?0:''));$('status').textContent=records[k]?'Loaded saved entry.':'New month — enter values and save.';render();}
+ function render(){
+  const k=$('month').value||currentKey,e=getEntry(),t=totals(e),income=Number(e.salary)||0;
+  $('summaryMonth').textContent=monthLabel(k)+' available savings';
+  $('available').textContent=money(t.saved);$('available').style.color=t.saved<0?'#ffd2cb':'#fff';
+  $('savingsRate').textContent='Savings rate: '+(income?(t.saved/income*100).toFixed(1):'0.0')+'% of income';
+  $('totalExpenses').textContent=money(t.expenses);$('totalSetAside').textContent=money(t.setAside);
+  const keys=Object.keys(records).sort();$('monthCount').textContent=keys.length;
+  $('cumulative').textContent=money(keys.reduce((s,key)=>s+totals(records[key]).saved,0));
+  const body=$('history');body.innerHTML='';
+  keys.slice().reverse().forEach(key=>{const r=records[key],z=totals(r),tr=document.createElement('tr');
+   const vals=[monthLabel(key),money(r.salary),money(z.expenses),money(z.saved)];
+   vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i>0)td.className='num';if(i===3&&z.saved<0)td.style.color='#a33d37';tr.appendChild(td);});
+   const td=document.createElement('td'),b=document.createElement('button');b.textContent='Edit';b.onclick=()=>loadMonth(key);td.appendChild(b);tr.appendChild(td);body.appendChild(tr);
+  });
+  $('empty').style.display=keys.length?'none':'block';
+  const years=Number($('years').value)||5,raise=Math.min(100,Math.max(0,Number($('raise').value)||0))/100;
+  const current=Math.max(0,t.saved),flat=current*12*years;
+  let growing=0;for(let i=0;i<years;i++)growing+=Math.max(0,income*Math.pow(1+raise,i)-t.expenses-(Number(e.invest)||0))*12;
+  $('projectionFlat').textContent=money(flat);$('projectionRaise').textContent=money(growing);
+ }
+ $('save').onclick=()=>{const k=$('month').value||currentKey;records[k]=getEntry();persist();ensureMonthOptions();$('month').value=k;render();};
+ $('month').onchange=()=>loadMonth($('month').value);
+ $('newMonth').onclick=()=>{const k=$('month').value||currentKey;const [y,m]=k.split('-').map(Number);const d=new Date(y,m,1);loadMonth(d.getFullYear()+'-'+pad(d.getMonth()+1));};
+ $('clearForm').onclick=()=>{fields.forEach(f=>$(f).value=nums.includes(f)?0:'');render();$('status').textContent='Fields cleared. Save to record this month.';};
+ nums.forEach(f=>$(f).addEventListener('input',render));$('notes').addEventListener('input',render);
+ $('years').onchange=render;$('raise').oninput=render;
+ $('export').onclick=()=>{const blob=new Blob([JSON.stringify({app:'My Savings Ledger',version:1,exportedAt:new Date().toISOString(),records},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-savings-backup.json';a.click();URL.revokeObjectURL(a.href);};
+ $('importFile').onchange=async ev=>{const file=ev.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());const incoming=data.records||data;if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))throw Error('Invalid backup');for(const [k,v] of Object.entries(incoming)){if(!/^\d{4}-\d{2}$/.test(k)||!v||typeof v!=='object')continue;records[k]=Object.assign({},records[k]||{},v);}persist();ensureMonthOptions();loadMonth($('month').value||currentKey);$('status').textContent='Backup imported. Review your saved months.';}catch(e){$('status').textContent='Could not import that file. Please choose a backup exported from this app.';}ev.target.value='';};
+ $('deleteAll').onclick=()=>{if(confirm('Permanently delete all saved monthly entries from this browser? Export a backup first if you may need them.')){records={};persist();ensureMonthOptions();loadMonth(currentKey);$('status').textContent='All saved entries deleted.';}};
+ readStore();ensureMonthOptions();loadMonth(records[currentKey]?currentKey:(Object.keys(records).sort().reverse()[0]||currentKey));
+})();
+</script>
+</body>
+</html>
